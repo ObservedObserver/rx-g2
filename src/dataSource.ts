@@ -1,6 +1,9 @@
-import { BehaviorSubject } from 'rxjs'
+import { BehaviorSubject, Observable } from 'rxjs'
+import * as op from 'rxjs/operators';
 import { IRow } from './interfaces'
 
-export function createVariable(dataSource: IRow[], field: string) {
-    return new BehaviorSubject(dataSource.map(r => r[field]))
+export function createVariable(dataSource: Observable<IRow[]>, field: string): Observable<any[]> {
+    return dataSource.pipe(op.map(ds => {
+        return ds.map(r => r[field]);
+    }))
 }

@@ -3,7 +3,7 @@ const path = require("path");
 
 module.exports = (env, args) => {
   console.log("webpack args: ", args);
-  const devContentBase = path.join(__dirname, "demo");
+  const devContentBase = path.join(__dirname, "dist");
   const prodContentBase = path.join(__dirname, "build");
   return {
     entry: "./demo/index.ts",

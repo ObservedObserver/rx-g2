@@ -1,5 +1,8 @@
+import { from, Observable } from 'rxjs';
 import { createVariable } from '../src/dataSource';
-import { createChart } from '../src/index';
+import { GREY_CAT_VALUE, ObservableChart, Utils } from '../src/index';
+import * as op from "rxjs/operators";
+import { IFilter, IRow } from '../src/interfaces';
 
 const root = document.querySelector('#root');
 
@@ -8,17 +11,35 @@ if (root) {
     chartContainer.setAttribute('style', 'width: 400px; height: 300px;')
     root.appendChild(chartContainer);
 
-    fetch("/cars.json")
-        .then((res) => res.json())
-        .then((res) => {
-            const origin$ = createVariable(res, "Origin");
-            const horsepower$ = createVariable(res, "Horsepower");
-            createChart({
-                container: chartContainer,
-                x$: origin$,
-                y$: horsepower$,
-            });
-        });
+    const dataSource$: Observable<IRow[]> = from(fetch("/cars.json").then((res) => res.json())).pipe(
+        op.startWith([])
+    );
+
+    const xVar$ = createVariable(dataSource$, "Miles_per_Gallon");
+    const yVar$ = createVariable(dataSource$, "Horsepower");
+    const colorVar$ = createVariable(dataSource$, 'Origin')
+
+    const obChart = new ObservableChart(chartContainer, 600, 400);
+    const predicates$: Observable<IFilter[]> = obChart.selection$.pipe(
+        op.map(rows => [Utils.createFilter('Origin', 'in', rows)])
+    )
+    const color$ = predicates$.pipe(
+        op.withLatestFrom(colorVar$, dataSource$),
+        op.map(([predicates, origin, dataSource]) => {
+            return dataSource.map((row, rIndex) => {
+                if (Utils.rowFilteredOut(row, predicates)) return GREY_CAT_VALUE;
+                return origin[rIndex]
+            })
+        })
+    )
+
+    obChart.specify({
+        x$: xVar$,
+        y$: yVar$,
+        color$,
+        viewRawData$: dataSource$
+    })
+
 } else {
     console.error('root node not exists.')
 }
