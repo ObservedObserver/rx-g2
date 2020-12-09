@@ -3,8 +3,16 @@
 
 基于rxjs的流对异步交互行为的抽象使你在实现复杂可视化交互逻辑时可以不需要花费过多的经历维护交互相关的状态。
 
+## 相关资料
++ [了解Rxjs](https://rxjs-dev.firebaseapp.com/guide/overview)
++ [了解AntV/G2](https://g2.antv.vision/zh/docs/manual/about-g2)
+
+G2提供了一套基于图形语法的声明式的可视化接口，它使得你可以用简介的写法快速实现复杂的可视化。但当你使用G2处理一些可视化的交互行为时，这种简洁之美就会被破坏掉，大量的外部状态和回调函数破坏了图形语法本身的美感。那能否对G2进行扩展，在保留其原始的使用美感的同时，能用同样简洁优雅的形式来构建交互式的可视化。
+
+受到Vega的启发，rx-g2使用了vega中的signals/predicates/transform的形式来抽象可视化中的异步行为。幸运的是，我们可以直接借助rxjs的能力实现这一机制，同时相比vega需要自定义一套复杂的dsl来支持这种机制，rxjs允许你直接使用JavaScript进行开发，我们也将一些原有的接口做了Observable的改造，这也使得你可以后续更自由的使用rxjs进行复杂交互行为的扩展。
+
 ## 案例
-实现下图的交互效果
+实现下图的交互效果，即当鼠标覆盖在一个点上时，能够高亮出和他origin类别相同的所有点。
 
 ![demo image](./imgs/rx-g2-single-selection-demo.gif)
 
@@ -14,6 +22,9 @@
 import { GREY_CAT_VALUE, ObservableChart, Utils } from 'rx-g2';
 import * as op from "rxjs/operators";
 
+const dataSource$: Observable<IRow[]> = from(fetch("/cars.json").then((res) => res.json())).pipe(
+    op.startWith([])
+);
 // 声明变量
 const xVar$ = createVariable(dataSource$, "Miles_per_Gallon");
 const yVar$ = createVariable(dataSource$, "Horsepower");
@@ -36,10 +47,25 @@ const color$ = predicates$.pipe(
     })
 )
 // 配置图标
-obChart.specify({
-    x$: xVar$,
-    y$: yVar$,
-    color$,
-    viewRawData$: dataSource$
+rxChart.geom('point').position([xVar$, yVar$])
+    .color(color$);
+
+rxChart.data(dataSource$);
+
+rxChart.render();
+```
+
+对比原生的写法，只是把静态的字段绑定变成了一个流的绑定。整体的书写习惯还沿用了G2的写法。
+```ts
+
+fetch('/cars.json').then(res => res.json()).then(res => {
+
+    chart.point().position('Miles_per_Gallon*Horsepower')
+    .color('Origin')
+
+    chart.data(dataSource)
+
+    chart.render();
 })
+
 ```

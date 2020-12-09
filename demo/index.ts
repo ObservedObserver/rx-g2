@@ -19,8 +19,8 @@ if (root) {
     const yVar$ = createVariable(dataSource$, "Horsepower");
     const colorVar$ = createVariable(dataSource$, 'Origin')
 
-    const obChart = new ObservableChart(chartContainer, 600, 400);
-    const predicates$: Observable<IFilter[]> = obChart.selection$.pipe(
+    const rxChart = new ObservableChart(chartContainer, 600, 400);
+    const predicates$: Observable<IFilter[]> = rxChart.selection$.pipe(
         op.map(rows => [Utils.createFilter('Origin', 'in', rows)])
     )
     const color$ = predicates$.pipe(
@@ -32,13 +32,19 @@ if (root) {
             })
         })
     )
-
-    obChart.specify({
-        x$: xVar$,
-        y$: yVar$,
-        color$,
-        viewRawData$: dataSource$
-    })
+    
+    rxChart.geom('point').position([xVar$, yVar$])
+        .color(color$);
+    
+    rxChart.data(dataSource$);
+    
+    rxChart.render();
+    // obChart.specify({
+    //     x$: xVar$,
+    //     y$: yVar$,
+    //     color$,
+    //     viewRawData$: dataSource$
+    // })
 
 } else {
     console.error('root node not exists.')
