@@ -13,7 +13,7 @@
 
 G2提供了一套基于图形语法的声明式的可视化接口，它使得你可以用简介的写法快速实现复杂的可视化。但当你使用G2处理一些可视化的交互行为时，这种简洁之美就会被破坏掉，大量的外部状态和回调函数破坏了图形语法本身的美感。那能否对G2进行扩展，在保留其原始的使用美感的同时，能用同样简洁优雅的形式来构建交互式的可视化。
 
-受到Vega的启发，rx-g2使用了vega中的signals/predicates/transform的形式来抽象可视化中的异步行为。幸运的是，我们可以直接借助rxjs的能力实现这一机制，同时相比vega需要自定义一套复杂的dsl来支持这种机制，rxjs允许你直接使用JavaScript进行开发，我们也将一些原有的接口做了Observable的改造，这也使得你可以后续更自由的使用rxjs进行复杂交互行为的扩展。
+受到[Vega](https://vega.github.io/vega/)的启发，rx-g2使用了vega中的signals/predicates/transform的形式来抽象可视化中的异步行为。幸运的是，我们可以直接借助rxjs的能力实现这一机制，同时相比vega需要自定义一套复杂的dsl来支持这种机制，rxjs允许你直接使用JavaScript进行开发，我们也将一些原有的接口做了Observable的改造，这也使得你可以后续更自由的使用rxjs进行复杂交互行为的扩展。
 
 ## 使用
 ```bash
@@ -78,3 +78,11 @@ fetch('/cars.json').then(res => res.json()).then(res => {
 })
 
 ```
+
+## 引用
+
+RxG2是参考reactive vega 和 vega-lite 中的一些概念
+
++ Satyanarayan, Arvind, et al. "Reactive vega: A streaming dataflow architecture for declarative interactive visualization." IEEE transactions on visualization and computer graphics 22.1 (2015): 659-668.
+
++ Satyanarayan, Arvind, et al. "Vega-lite: A grammar of interactive graphics." IEEE transactions on visualization and computer graphics 23.1 (2016): 341-350.
