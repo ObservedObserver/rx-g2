@@ -17,7 +17,8 @@
         "resolveJsonModule": true,
         "sourceMap": true,
         "jsx": "react",
-        "downlevelIteration": true
+        "downlevelIteration": true,
+        "declaration": true
     },
     "include": [
         "src",

@@ -1,18 +1,23 @@
 {
-  "name": "rx-g2",
+  "name": "rxg2",
   "version": "0.0.1",
   "description": "",
-  "main": "index.js",
+  "main": "./build/index.js",
+  "types": "./build/index.d.ts",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "webpack serve"
+    "dev": "webpack serve",
+    "build": "tsc"
   },
   "prettier": {
     "tabWidth": 4
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "keywords": ["rxg2", "rxjs", "antv", "visualization"],
+  "author": {
+    "name": "ObservedObserver",
+    "email": "270001151@qq.com"
+  },
+  "license": "MIT",
   "devDependencies": {
     "html-webpack-plugin": "^4.5.0",
     "ts-loader": "^8.0.11",

@@ -1,4 +1,8 @@
-# rx-g2
+# RxG2
+
+![](https://img.shields.io/github/license/ObservedObserver/rx-g2)
+![](https://img.shields.io/npm/v/rxg2)
+
 响应式G2(RxG2)，是使用rxjs封装的响应式的antv/g2的可视化扩展。它使你可以使用类似vega的形式，编写响应式的可视化图表。这也为G2拓展了交互式图形语法的可能（针对数据可视化，G2目前的交互语法其实更像是G层面的交互语法，其更关注图形的基础交互行为，而非可视化层面）。
 
 基于rxjs的流对异步交互行为的抽象使你在实现复杂可视化交互逻辑时可以不需要花费过多的经历维护交互相关的状态。
@@ -11,6 +15,11 @@ G2提供了一套基于图形语法的声明式的可视化接口，它使得你
 
 受到Vega的启发，rx-g2使用了vega中的signals/predicates/transform的形式来抽象可视化中的异步行为。幸运的是，我们可以直接借助rxjs的能力实现这一机制，同时相比vega需要自定义一套复杂的dsl来支持这种机制，rxjs允许你直接使用JavaScript进行开发，我们也将一些原有的接口做了Observable的改造，这也使得你可以后续更自由的使用rxjs进行复杂交互行为的扩展。
 
+## 使用
+```bash
+npm i --save rxg2
+```
+
 ## 案例
 实现下图的交互效果，即当鼠标覆盖在一个点上时，能够高亮出和他origin类别相同的所有点。
 
@@ -19,7 +28,7 @@ G2提供了一套基于图形语法的声明式的可视化接口，它使得你
 使用rx-g2的写法
 
 ```ts
-import { GREY_CAT_VALUE, ObservableChart, Utils } from 'rx-g2';
+import { GREY_CAT_VALUE, ObservableChart, Utils } from 'rxg2';
 import * as op from "rxjs/operators";
 
 const dataSource$: Observable<IRow[]> = from(fetch("/cars.json").then((res) => res.json())).pipe(
