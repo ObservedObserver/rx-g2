@@ -39,9 +39,9 @@ const xVar$ = createVariable(dataSource$, "Miles_per_Gallon");
 const yVar$ = createVariable(dataSource$, "Horsepower");
 const colorVar$ = createVariable(dataSource$, 'Origin')
 // 初始化图表
-const obChart = new ObservableChart(chartContainer, 600, 400);
+const rxChart = new ObservableChart(chartContainer, 600, 400);
 // 定义图表交互事件产生的predicates,vega中的概念，类似对selection的特征描述，由一堆筛选器构成。
-const predicates$: Observable<IFilter[]> = obChart.selection$.pipe(
+const predicates$: Observable<IFilter[]> = rxChart.selection$.pipe(
     op.map(rows => [Utils.createFilter('Origin', 'in', rows)])
 )
 // 定义颜色为一个随交互行为变化的变量,

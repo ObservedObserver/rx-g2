@@ -2,7 +2,7 @@ import { from, Observable } from 'rxjs';
 import { createVariable } from '../src/dataSource';
 import { GREY_CAT_VALUE, ObservableChart, Utils } from '../src/index';
 import * as op from "rxjs/operators";
-import { IFilter, IRow } from '../src/interfaces';
+import { IFilter, IRow, RGEventStreamTarget } from '../src/interfaces';
 
 const root = document.querySelector('#root');
 
@@ -19,13 +19,30 @@ if (root) {
     const yVar$ = createVariable(dataSource$, "Horsepower");
     const colorVar$ = createVariable(dataSource$, 'Origin')
 
-    const rxChart = new ObservableChart(chartContainer, 600, 400);
-    const predicates$: Observable<IFilter[]> = rxChart.selection$.pipe(
-        op.map(rows => [Utils.createFilter('Origin', 'in', rows)])
+    const rxChart = new ObservableChart({ 
+        container: chartContainer,
+        width: 600,
+        height: 400,
+        padding: [40, 40, 40, 40]
+    });
+    
+    const selection$ = rxChart.useSelection({
+        target: 'element',
+        type: 'single',
+        on: 'click'
+    });
+
+    const predicates$: Observable<IFilter[]> = selection$.pipe(
+        op.map(x => {
+            console.log('init-x',x)
+            return x;
+        }),
+        op.map(rows => [Utils.createFilter('Origin', 'in', rows.filter(row => row !== null) as IRow[])])
     )
     const color$ = predicates$.pipe(
         op.withLatestFrom(colorVar$, dataSource$),
         op.map(([predicates, origin, dataSource]) => {
+            console.log('init', predicates)
             return dataSource.map((row, rIndex) => {
                 if (Utils.rowFilteredOut(row, predicates)) return GREY_CAT_VALUE;
                 return origin[rIndex]
