@@ -24,7 +24,7 @@ module.exports = (env, args) => {
           contentBase:
               args.mode === "production" ? prodContentBase : devContentBase,
           compress: true,
-          port: 9000,
+          port: 1996,
       },
       resolve: {
           extensions: [".tsx", ".ts", ".js"],

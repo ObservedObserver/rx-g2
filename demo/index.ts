@@ -1,8 +1,8 @@
-import { from, Observable } from 'rxjs';
+import { combineLatest, from, Observable } from 'rxjs';
 import { createVariable } from '../src/dataSource';
 import { GREY_CAT_VALUE, ObservableChart, Utils } from '../src/index';
 import * as op from "rxjs/operators";
-import { IFilter, IRow, RGEventStreamTarget } from '../src/interfaces';
+import { IFilter, IRow } from '../src/interfaces';
 
 const root = document.querySelector('#root');
 
@@ -12,12 +12,13 @@ if (root) {
     root.appendChild(chartContainer);
 
     const dataSource$: Observable<IRow[]> = from(fetch("/cars.json").then((res) => res.json())).pipe(
-        op.startWith([])
+        op.startWith([]),
+        op.share()
     );
 
     const xVar$ = createVariable(dataSource$, "Miles_per_Gallon");
     const yVar$ = createVariable(dataSource$, "Horsepower");
-    const colorVar$ = createVariable(dataSource$, 'Origin')
+    const colorVar$ = createVariable(dataSource$, 'Origin');
 
     const rxChart = new ObservableChart({ 
         container: chartContainer,
@@ -28,35 +29,29 @@ if (root) {
     
     const selection$ = rxChart.useSelection({
         target: 'element',
-        type: 'single',
+        type: 'multiple',
         on: 'click'
     });
-
     const predicates$: Observable<IFilter[]> = selection$.pipe(
-        op.map(x => {
-            console.log('init-x',x)
-            return x;
-        }),
-        op.map(rows => [Utils.createFilter('Origin', 'in', rows.filter(row => row !== null) as IRow[])])
+        op.map(rows => [Utils.createFilter('Cylinders', 'in', rows.filter(row => row !== null) as IRow[])])
     )
-    const color$ = predicates$.pipe(
-        op.withLatestFrom(colorVar$, dataSource$),
+    const color$ = combineLatest([predicates$, colorVar$, dataSource$]).pipe(
         op.map(([predicates, origin, dataSource]) => {
-            console.log('init', predicates)
             return dataSource.map((row, rIndex) => {
                 if (Utils.rowFilteredOut(row, predicates)) return GREY_CAT_VALUE;
                 return origin[rIndex]
-            })
+            });
         })
-    )
+    );
     
-    rxChart.geom('point').position([xVar$, yVar$])
+    rxChart.geom('point', geo => geo?.shape('circle').style({ stroke: null }))
+        .position([xVar$, yVar$])
         .color(color$);
     
     rxChart.data(dataSource$);
     
     rxChart.render();
-    // obChart.specify({
+    // rxChart.specify({
     //     x$: xVar$,
     //     y$: yVar$,
     //     color$,

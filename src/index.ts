@@ -1,5 +1,5 @@
-import { Chart } from '@antv/g2';
-import { BehaviorSubject, combineLatest, from, Observable } from 'rxjs';
+import { Chart, Geometry } from '@antv/g2';
+import { BehaviorSubject, combineLatest, from, Observable, of } from 'rxjs';
 import * as op from 'rxjs/operators';
 import { IColumn, IRow, RGEventStreamTarget, RGEventStreamTargetValues, RGEventStreamType, RGEventStreamTypeValues, RGSelectionProps } from './interfaces';
 import { colorcat20, tableau10 } from './scheme';
@@ -29,11 +29,13 @@ interface IChartInitProps {
 
 export class ObservableChart {
     public chart: Chart;
+    private geometry: Geometry | null;
     private colorMap: Map<any, string>;
     private geomType: IGeomType;
     private pos$: [Observable<any[]>, Observable<any[]>] | null;
     private color$: Observable<any[]> | null;
     private rawData$: Observable<IRow[]>;
+    private updateCount: number;
     // private viewData$: Observable<IRow[]>;
     private eventStreams$: StreamPackage;
     constructor(props: IChartInitProps) {
@@ -47,9 +49,11 @@ export class ObservableChart {
         this.pos$ = null;
         this.color$ = null;
         this.rawData$ = new BehaviorSubject([]);
+        this.updateCount = 0;
+        this.geometry = null;
         // this.viewData$ = new BehaviorSubject([]);
     }
-    public useSelection(props: RGSelectionProps) {
+    public useSelection(props: RGSelectionProps): Observable<(IRow | null)[]> {
         const { eventStreams$ } = this;
         const inverseElement$ = elementSelection.useInverseElement(eventStreams$.plot$.click$);
         const { target, type, on, closingNotifier = inverseElement$ } = props;
@@ -59,19 +63,22 @@ export class ObservableChart {
             if (type === 'single') {
                 const cancelSelection$: Observable<IRow[]> = closingNotifier.pipe(
                     op.map(() => {
-                        return []
+                        return [];
                     })
-                )
+                );
                 // return combineLatest([elementSelection.useSingleSelection(eventStreams$.element$[streamKey]), closingNotifier]);
                 return elementSelection
                     .useSingleSelection(eventStreams$.element$[streamKey])
                     .pipe(op.map(s => [s]))
-                    .pipe(op.merge(cancelSelection$));
+                    .pipe(op.merge(cancelSelection$))
                     // .pipe(op.withLatestFrom(cancelSelection$))
             }
             if (type === 'multiple') {
+                const cancelSelection$: Observable<null> = closingNotifier.pipe(
+                    op.map(() => null)
+                );
                 return elementSelection
-                    .useMultipleSelection(eventStreams$.element$[streamKey], closingNotifier)
+                    .useMultipleSelection(eventStreams$.element$[streamKey], cancelSelection$)
 
             }
         }
@@ -81,8 +88,12 @@ export class ObservableChart {
         this.colorMap = new Map();
         this.colorMap.set(GREY_CAT_VALUE, 'grey');
     }
-    public geom(geomType: IGeomType) {
+    public geom(geomType: IGeomType, adjustGeom?: (geom: Geometry | null) => void) {
         this.geomType = geomType;
+        this.geometry = this.chart[geomType]();
+        if (adjustGeom) {
+            adjustGeom(this.geometry);
+        }
         return this;
     }
     public position(pos: [Observable<any[]>, Observable<any[]>]) {
@@ -96,7 +107,10 @@ export class ObservableChart {
         this.rawData$ = rawData$;
     }
     render() {
-        const geom = this.chart[this.geomType]();
+        const geom = this.geometry;
+        if (geom === null) {
+            throw new Error('render is called before geom is set.')
+        }
         if (this.pos$) {
             const [x$, y$] = this.pos$;
             const color$ = this.color$ ? this.color$ : new BehaviorSubject([]);
@@ -104,6 +118,11 @@ export class ObservableChart {
             geom.position(['x', 'y']);
             const viewData$ = combineLatest([x$, y$, color$, rawData$]).pipe(
                 op.map(([x, y, color, viewRawData]) => {
+                    color.forEach((c) => {
+                        if (!this.colorMap.has(c)) {
+                            this.colorMap.set(c, tableau10[(this.colorMap.size - 1 + tableau10.length) % tableau10.length]);
+                        }
+                    });
                     const rows: IRow[] = x.map((xi, i) => {
                         return {
                             ...viewRawData[i],
@@ -116,21 +135,19 @@ export class ObservableChart {
                 })
             );
             viewData$.subscribe((viewData) => {
-                this.chart.data(viewData);
-                this.chart.render();
+
+                if (this.updateCount === 0) {
+                    this.chart.data(viewData);
+                    this.chart.render()
+                } else {
+                    this.chart.changeData(viewData);
+                }
+                this.updateCount++;
             });
         }
         if (this.color$) {
             geom.color('color', (c) => {
                 return this.colorMap.get(c) || tableau10[0];
-            });
-            this.color$.subscribe((colors) => {
-                colors.forEach((c) => {
-                    if (!this.colorMap.has(c)) {
-                        this.colorMap.set(c, tableau10[this.colorMap.size % tableau10.length]);
-                    }
-                });
-                console.log(this.colorMap)
             });
         }
     }
@@ -145,7 +162,7 @@ export class ObservableChart {
         color$.subscribe((colors) => {
             colors.forEach((c) => {
                 if (!this.colorMap.has(c)) {
-                    this.colorMap.set(c, tableau10[this.colorMap.size % tableau10.length]);
+                    this.colorMap.set(c, tableau10[(this.colorMap.size - 1 + tableau10.length) % tableau10.length]);
                 }
             });
         });
