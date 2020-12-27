@@ -1,3 +1,16 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+import { combineLatest, from, Observable } from 'rxjs';
+import { createVariable } from '../../src/dataSource';
+import { GREY_CAT_VALUE, ObservableChart, Utils } from '../../src/index';
+import * as op from "rxjs/operators";
+import { IFilter, IRow } from '../../src/interfaces';
+import ReactChart from './react-chart.tsx'
+import { singleSelectionSpec } from './selection/single.ts'
+
+<Meta title="Example/Introduction" />
+
+<style>{``}</style>
+
 # RxG2
 
 ![](https://img.shields.io/github/license/ObservedObserver/rx-g2)
@@ -23,7 +36,7 @@ npm i --save rxg2
 ## 案例
 实现下图的交互效果，即当鼠标覆盖在一个点上时，能够高亮出和他origin类别相同的所有点。
 
-![demo image](./imgs/rxg2-select.gif)
+<ReactChart spec={singleSelectionSpec} />
 
 使用rx-g2的写法
 
@@ -64,7 +77,7 @@ const color$ = combineLatest([predicates$, colorVar$, dataSource$]).pipe(
 // 配置图标
 rxChart.geom('point').position([xVar$, yVar$])
     .color(color$);
-Â
+
 rxChart.data(dataSource$);
 
 rxChart.render();

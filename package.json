@@ -7,21 +7,38 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "webpack serve --mode=development",
-    "build": "tsc"
+    "build": "tsc",
+    "storybook": "start-storybook -s ./demo/public -p 6006",
+    "build-storybook": "build-storybook -o ./docs"
   },
   "prettier": {
     "tabWidth": 4,
     "singleQuote": true,
     "printWidth": 140
   },
-  "keywords": ["rxg2", "rxjs", "antv", "visualization"],
+  "keywords": [
+    "rxg2",
+    "rxjs",
+    "antv",
+    "visualization"
+  ],
   "author": {
     "name": "ObservedObserver",
     "email": "270001151@qq.com"
   },
   "license": "MIT",
   "devDependencies": {
-    "html-webpack-plugin": "^4.5.0",
+    "@babel/core": "^7.12.10",
+    "@storybook/addon-actions": "^6.1.11",
+    "@storybook/addon-essentials": "^6.1.11",
+    "@storybook/addon-links": "^6.1.11",
+    "@storybook/react": "^6.1.11",
+    "@types/react": "^17.0.0",
+    "@types/react-dom": "^17.0.0",
+    "babel-loader": "^8.2.2",
+    "html-webpack-plugin": "^5.0.0-beta.1",
+    "react": "^17.0.1",
+    "react-dom": "^17.0.1",
     "ts-loader": "^8.0.11",
     "typescript": "^4.1.2",
     "webpack": "^5.10.0",
