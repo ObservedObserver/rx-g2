@@ -16,7 +16,7 @@
         "moduleResolution": "node",
         "resolveJsonModule": true,
         "sourceMap": true,
-        "jsx": "react",
+        "jsx": "react-jsx",
         "downlevelIteration": true,
         "declaration": true
     },
