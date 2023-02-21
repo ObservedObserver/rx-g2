@@ -3,29 +3,29 @@
 ![](https://img.shields.io/github/license/ObservedObserver/rx-g2)
 ![](https://img.shields.io/npm/v/rxg2)
 
-响应式G2(RxG2)，是使用rxjs封装的响应式的antv/g2的可视化扩展。它使你可以使用函数响应式编程(Functional Reactive Programming, FRP)的形式，编写响应式的可视化图表。这也为G2拓展了交互式图形语法的可能（针对数据可视化，G2目前的交互语法其实更像是G层面的交互语法，其更关注图形的基础交互行为，而非可视化层面）。
+Responsive G2 (RxG2) is a responsive visualization extension of AntV/G2 that is wrapped with RxJS. It allows you to write responsive visualizations in functional reactive programming (FRP) style. This also expands the possibilities of G2's interactive graphics syntax (for data visualization, G2's current interactive syntax is more like G-level interactive syntax, which is more focused on the basic interactive behavior of graphics, rather than the visualization aspect).
 
-基于rxjs的流对异步交互行为的抽象使你在实现复杂可视化交互逻辑时可以不需要花费过多的经历维护交互相关的状态。
+Based on RxJS streams, the abstraction of asynchronous interactive behavior allows you to implement complex visualization interaction logic without spending too much effort maintaining interaction-related states.
 
-## 相关资料
-+ [了解Rxjs](https://rxjs-dev.firebaseapp.com/guide/overview)
-+ [了解AntV/G2](https://g2.antv.vision/zh/docs/manual/about-g2)
+## Related Resources
++ [Learn Rxjs](https://rxjs-dev.firebaseapp.com/guide/overview)
++ [Learn AntV/G2](https://g2.antv.vision/zh/docs/manual/about-g2)
 
-G2提供了一套基于图形语法的声明式的可视化接口，它使得你可以用简介的写法快速实现复杂的可视化。但当你使用G2处理一些可视化的交互行为时，这种简洁之美就会被破坏掉，大量的外部状态和回调函数破坏了图形语法本身的美感。那能否对G2进行扩展，在保留其原始的使用美感的同时，能用同样简洁优雅的形式来构建交互式的可视化。
+G2 provides a declarative visualization interface based on graphic syntax, which allows you to quickly implement complex visualizations with concise code. However, when using G2 to handle some visualization interactions, this simplicity is often disrupted by a large amount of external state and callback functions, which undermines the beauty of graphic syntax itself. Is it possible to extend G2, retaining its original aesthetic appeal, and at the same time, enabling the construction of interactive visualizations in a similarly concise and elegant manner?
 
-受到[Vega](https://vega.github.io/vega/)的启发，rx-g2使用了vega中的signals/predicates/transform的形式来抽象可视化中的异步行为。幸运的是，我们可以直接借助rxjs的能力实现这一机制，同时相比vega需要自定义一套复杂的dsl来支持这种机制，rxjs允许你直接使用JavaScript进行开发，我们也将一些原有的接口做了Observable的改造，这也使得你可以后续更自由的使用rxjs进行复杂交互行为的扩展。
+RxG2, inspired by Vega, uses the form of signals/predicates/transforms in Vega to abstract asynchronous behavior in visualization. Fortunately, we can directly utilize the capabilities of RxJS to implement this mechanism, while compared to Vega, which requires customizing a complex DSL to support this mechanism, RxJS allows you to develop directly with JavaScript. We have also made some modifications to the existing interfaces using Observables, which makes it easier for you to use RxJS for complex interactive behavior extensions in the future.
 
-## 使用
+## Usage
 ```bash
 npm i --save rxg2
 ```
 
-## 案例
-实现下图的交互效果，即当鼠标覆盖在一个点上时，能够高亮出和他origin类别相同的所有点。
+## Examples
+Implement the interactive effect shown in the figure, i.e., when the mouse hovers over a point, all points with the same 'origin' category as that point should be highlighted.
 
 ![demo image](./imgs/rxg2-select.gif)
 
-使用rx-g2的写法
+with rx-g2
 
 ```ts
 import { GREY_CAT_VALUE, ObservableChart, Utils } from 'rxg2';
@@ -34,12 +34,12 @@ import * as op from "rxjs/operators";
 const dataSource$: Observable<IRow[]> = from(fetch("/cars.json").then((res) => res.json())).pipe(
     op.startWith([])
 );
-// 声明变量
+// declare vars
 const xVar$ = createVariable(dataSource$, "Miles_per_Gallon");
 const yVar$ = createVariable(dataSource$, "Horsepower");
 const colorVar$ = createVariable(dataSource$, 'Origin')
 
-// 初始化图表
+// init chart
 const rxChart = new ObservableChart();
 
 const selection$ = rxChart.useSelection({
@@ -47,12 +47,14 @@ const selection$ = rxChart.useSelection({
     type: 'single',
     on: 'mouseover',
 });
-// 定义图表交互事件产生的predicates,vega中的概念，类似对selection的特征描述，由一堆筛选器构成。
+
+// define predicates from interaction(concept in vega)
 const predicates$: Observable<IFilter[]> = selection$.pipe(
     op.map((rows) => [Utils.createFilter('Cylinders', 'in', rows.filter((row) => row !== null) as IRow[])])
 );
-// 定义颜色为一个随交互行为变化的变量,
-// rx-g2允许你对任何映射到视觉通道上的字段可以升级为一个更为动态变量，而不是写死于一个数据集中已有的常量字段
+
+// declare color as a variable streamed by interaction
+// rx-g2 allows you to map any visual channels to a dynamic variable, instead of a contant column key
 const color$ = combineLatest([predicates$, colorVar$, dataSource$]).pipe(
     op.map(([predicates, origin, dataSource]) => {
         return dataSource.map((row, rIndex) => {
@@ -61,16 +63,16 @@ const color$ = combineLatest([predicates$, colorVar$, dataSource$]).pipe(
         });
     })
 );
-// 配置图标
+// config chart
 rxChart.geom('point').position([xVar$, yVar$])
     .color(color$);
-Â
+
 rxChart.data(dataSource$);
 
 rxChart.render();
 ```
 
-对比原生的写法，只是把静态的字段绑定变成了一个流的绑定。整体的书写习惯还沿用了G2的写法。
+comparing with the original implementation, it allows you to change contant column key to a stream/signals/variable, with declarative graphics of grammar.
 ```ts
 
 fetch('/cars.json').then(res => res.json()).then(res => {
@@ -85,9 +87,9 @@ fetch('/cars.json').then(res => res.json()).then(res => {
 
 ```
 
-## 引用
+## Reference
 
-RxG2是参考reactive vega 和 vega-lite 中的一些概念
+RxG2 is inspired by reactive vega and vega-lite
 
 + Satyanarayan, Arvind, et al. "Reactive vega: A streaming dataflow architecture for declarative interactive visualization." IEEE transactions on visualization and computer graphics 22.1 (2015): 659-668.
 
